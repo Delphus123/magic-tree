@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Tree 🌳</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-sky: #1a1a2e;
+            --bg-sky-light: #16213e;
+            --tree-brown: #4a3728;
+            --tree-dark: #2d1f14;
+            --leaf-green: #2d5a27;
+            --leaf-light: #4a8c3f;
+            --fruit-red: #e74c3c;
+            --fruit-gold: #f1c40f;
+            --player-skin: #ffd93d;
+            --player-shirt: #3498db;
+            --enemy-bird: #9b59b6;
+            --ground: #3d2914;
+            --ui-bg: rgba(0, 0, 0, 0.85);
+            --text-primary: #ecf0f1;
+            --accent: #e74c3c;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: var(--bg-sky);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 4/3;
+            background: linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-sky-light) 50%, #1e3a5f 100%);
+            border: 4px solid var(--tree-brown);
+            border-radius: 8px;
+            overflow: hidden;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-primary);
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .score-display, .level-display, .lives-display {
+            background: var(--ui-bg);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 2px solid var(--tree-brown);
+        }
+
+        #menu-screen, #gameover-screen, #level-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ui-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            color: var(--text-primary);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #2ecc71;
+            text-shadow: 3px 3px 0 var(--tree-dark);
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h2 {
+            font-size: 16px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 10px;
+            line-height: 2;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+
+        .btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            padding: 15px 30px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 2px 2px 0 #000;
+            box-shadow: 0 4px 0 #c0392b;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #c0392b;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #c0392b;
+        }
+
+        .btn-secondary {
+            background: #3498db;
+            box-shadow: 0 4px 0 #2980b9;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 0 #2980b9;
+        }
+
+        .btn-secondary:active {
+            box-shadow: 0 2px 0 #2980b9;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 8px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        .controls div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key {
+            background: #2c3e50;
+            padding: 6px 10px;
+            border-radius: 3px;
+            border: 2px solid #34495e;
+        }
+
+        #final-score {
+            font-size: 20px;
+            color: var(--fruit-gold);
+            margin: 20px 0;
+        }
+
+        .high-score {
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        .level-info {
+            font-size: 12px;
+            color: #2ecc71;
+            margin: 10px 0;
+        }
+
+        .pixel-tree {
+            font-size: 60px;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        /* Stars background */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 16px; }
+            .btn { font-size: 10px; padding: 12px 20px; }
+            #ui-overlay { font-size: 8px; padding: 8px; }
+            .controls { font-size: 7px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui-overlay">
+            <div class="score-display">SCORE: <span id="score">0</span></div>
+            <div class="level-display">LEVEL: <span id="level">1</span></div>
+            <div class="lives-display">LIVES: <span id="lives">3</span></div>
+        </div>
+
+        <div id="menu-screen">
+            <div class="pixel-tree">🌳</div>
+            <h1>MAGIC TREE</h1>
+            <p>Climb the magical tree!<br>Collect fruits & avoid birds!</p>
+            <button class="btn" onclick="startGame()">START GAME</button>
+            <div class="controls">
+                <div><span class="key">↑↓</span> Move</div>
+                <div><span class="key">←→</span> Jump</div>
+                <div><span class="key">SPACE</span> Jump</div>
+                <div><span class="key">ENTER</span> Pause</div>
+            </div>
+        </div>
+
+        <div id="level-screen" class="hidden">
+            <h2>LEVEL <span id="level-num">1</span></h2>
+            <p id="level-desc">Collect all golden fruits!</p>
+            <div class="level-info">
+                Target: <span id="level-target">1000</span> pts<br>
+                Time: <span id="level-time">60</span>s
+            </div>
+        </div>
+
+        <div id="gameover-screen" class="hidden">
+            <h2>GAME OVER</h2>
+            <div id="final-score">0</div>
+            <p class="high-score">HIGH SCORE: <span id="high-score">0</span></p>
+            <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+            <button class="btn btn-secondary" onclick="showMenu()">MENU</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        // Sound effects
+        const sounds = {
+            jump: () => playTone(400, 0.1, 'square', 0.1),
+            collect: () => playTone(800, 0.1, 'sine', 0.2),
+            powerup: () => playTone([600, 800, 1000], 0.15, 'square', 0.15),
+            hit: () => playTone(200, 0.3, 'sawtooth', 0.2),
+            levelup: () => playTone([500, 700, 900, 1100], 0.1, 'square', 0.1),
+            gameover: () => playTone([400, 300, 200, 100], 0.2, 'sawtooth', 0.3)
+        };
+
+        function playTone(freq, duration, type = 'sine', volume = 0.1) {
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = type;
+                oscillator.frequency.value = freq;
+                
+                gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        // Game configuration
+        const CONFIG = {
+            width: 800,
+            height: 600,
+            playerSize: 24,
+            branchHeight: 20,
+            fruitSize: 16,
+            enemySize: 24,
+            gravity: 0.5,
+            jumpForce: -12,
+            moveSpeed: 5,
+            levels: [
+                { targetScore: 1000, timeLimit: 60, enemySpeed: 2, fruitCount: 8, description: "Collect golden fruits!" },
+                { targetScore: 2500, timeLimit: 75, enemySpeed: 3, fruitCount: 12, description: "Avoid the birds!" },
+                { targetScore: 4000, timeLimit: 90, enemySpeed: 4, fruitCount: 16, description: "Final challenge!" }
+            ]
+        };
+
+        // Game state
+        let canvas, ctx;
+        let gameState = 'menu';
+        let score = 0;
+        let highScore = localStorage.getItem('magicTreeHighScore') || 0;
+        let currentLevel = 0;
+        let lives = 3;
+        let timeRemaining = 60;
+        let lastTime = 0;
+        let animationId;
+        let fruits = [];
+        let enemies = [];
+        let branches = [];
+        let ladders = [];
+        let trees = [];
+        let player = null;
+        let keys = {};
+
+        // Player class
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.onBranch = false;
+                this.onLadder = false;
+                this.facing = 1;
+                this.animFrame = 0;
+                this.animTimer = 0;
+                this.invincible = false;
+                this.invincibleTimer = 0;
+            }
+
+            update() {
+                // Horizontal movement
+                if (keys['ArrowLeft'] || keys['KeyA']) {
+                    this.vx = -CONFIG.moveSpeed;
+                    this.facing = -1;
+                } else if (keys['ArrowRight'] || keys['KeyD']) {
+                    this.vx = CONFIG.moveSpeed;
+                    this.facing = 1;
+                } else {
+                    this.vx *= 0.8;
+                }
+
+                // Jump
+                if ((keys['Space']) && (this.onBranch || this.onLadder)) {
+                    this.vy = CONFIG.jumpForce;
+                    this.onBranch = false;
+                    this.onLadder = false;
+                    sounds.jump();
+                }
+
+                // Check if near ladder and trying to climb
+                let nearLadder = false;
+                for (let ladder of ladders) {
+                    if (this.x + CONFIG.playerSize/2 > ladder.x - 10 && 
+                        this.x + CONFIG.playerSize/2 < ladder.x + ladder.width + 10 &&
+                        this.y + CONFIG.playerSize > ladder.y1 - 20 && 
+                        this.y < ladder.y2 + 20) {
+                        nearLadder = true;
+                        break;
+                    }
+                }
+                
+                // Ladder climbing - only ArrowUp/ArrowDown for climbing (not jumping)
+                if (nearLadder && (keys['ArrowUp'] || keys['ArrowDown'])) {
+                    this.onLadder = true;
+                    // Find and snap to ladder
+                    for (let ladder of ladders) {
+                        if (this.x + CONFIG.playerSize/2 > ladder.x - 10 && 
+                            this.x + CONFIG.playerSize/2 < ladder.x + ladder.width + 10) {
+                            this.x = ladder.x + ladder.width/2 - CONFIG.playerSize/2;
+                            break;
+                        }
+                    }
+                }
+                
+                if (this.onLadder) {
+                    this.vy = 0;
+                    if (keys['ArrowUp'] || keys['KeyW']) {
+                        this.vy = -4;
+                        this.vx *= 0.5;
+                    } else if (keys['ArrowDown'] || keys['KeyS']) {
+                        this.vy = 4;
+                        this.vx *= 0.5;
+                    } else {
+                        // Stand still on ladder
+                        this.vx *= 0.8;
+                    }
+                    // Check if still on ladder or jumped off
+                    let stillOnLadder = false;
+                    for (let ladder of ladders) {
+                        if (this.x + CONFIG.playerSize/2 > ladder.x && 
+                            this.x + CONFIG.playerSize/2 < ladder.x + ladder.width &&
+                            this.y + CONFIG.playerSize > ladder.y1 && 
+                            this.y < ladder.y2) {
+                            stillOnLadder = true;
+                            break;
+                        }
+                    }
+                    if (!stillOnLadder && this.y > CONFIG.height - 60) {
+                        this.onLadder = false;
+                    }
+                } else {
+                    // Apply gravity when not on ladder
+                    this.vy += CONFIG.gravity;
+                }
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Check branch collision (only when not on ladder and falling)
+                if (!this.onLadder) {
+                    this.onBranch = false;
+                    for (let branch of branches) {
+                        if (this.vy > 0 &&
+                            this.x + CONFIG.playerSize > branch.x &&
+                            this.x < branch.x + branch.width &&
+                            Math.abs((this.y + CONFIG.playerSize) - branch.y) < 10) {
+                            this.y = branch.y - CONFIG.playerSize;
+                            this.vy = 0;
+                            this.onBranch = true;
+                        }
+                    }
+                }
+
+                // Ground collision
+                if (this.y + CONFIG.playerSize > CONFIG.height - 40) {
+                    this.y = CONFIG.height - 40 - CONFIG.playerSize;
+                    this.vy = 0;
+                    this.onBranch = true;
+                }
+
+                // Screen boundaries
+                if (this.x < 0) this.x = 0;
+                if (this.x > CONFIG.width - CONFIG.playerSize) this.x = CONFIG.width - CONFIG.playerSize;
+
+                // Animation
+                this.animTimer++;
+                if (this.animTimer > 8) {
+                    this.animTimer = 0;
+                    this.animFrame = (this.animFrame + 1) % 4;
+                }
+
+                // Invincibility
+                if (this.invincible) {
+                    this.invincibleTimer--;
+                    if (this.invincibleTimer <= 0) {
+                        this.invincible = false;
+                    }
+                }
+            }
+
+            draw() {
+                if (this.invincible && Math.floor(Date.now() / 100) % 2 === 0) return;
+
+                ctx.save();
+                ctx.translate(this.x + CONFIG.playerSize/2, this.y + CONFIG.playerSize/2);
+                ctx.scale(this.facing, 1);
+                ctx.translate(-CONFIG.playerSize/2, -CONFIG.playerSize/2);
+
+                // Body
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(4, 8, 16, 12);
+
+                // Head
+                ctx.fillStyle = '#ffd93d';
+                ctx.fillRect(6, 0, 12, 10);
+
+                // Eyes
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(12, 3, 3, 3);
+
+                // Legs (animated)
+                ctx.fillStyle = '#e74c3c';
+                if (Math.abs(this.vx) > 0.5) {
+                    const legOffset = this.animFrame % 2 === 0 ? 2 : 0;
+                    ctx.fillRect(6 + legOffset, 20, 4, 4);
+                    ctx.fillRect(14 - legOffset, 20, 4, 4);
+                } else {
+                    ctx.fillRect(6, 20, 4, 4);
+                    ctx.fillRect(14, 20, 4, 4);
+                }
+
+                ctx.restore();
+            }
+
+            getBounds() {
+                return { x: this.x, y: this.y, w: CONFIG.playerSize, h: CONFIG.playerSize };
+            }
+        }
+
+        // Fruit class
+        class Fruit {
+            constructor(x, y, type = 'gold') {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.collected = false;
+                this.animOffset = Math.random() * Math.PI * 2;
+            }
+
+            draw() {
+                if (this.collected) return;
+
+                const bounce = Math.sin(Date.now() / 200 + this.animOffset) * 3;
+                
+                ctx.save();
+                ctx.translate(this.x + CONFIG.fruitSize/2, this.y + CONFIG.fruitSize/2 + bounce);
+                
+                // Glow
+                ctx.shadowColor = this.type === 'gold' ? '#f1c40f' : '#e74c3c';
+                ctx.shadowBlur = 10;
+
+                // Fruit body
+                ctx.fillStyle = this.type === 'gold' ? '#f1c40f' : '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(0, 0, CONFIG.fruitSize/2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Stem
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(-2, -CONFIG.fruitSize/2 - 3, 4, 4);
+
+                // Shine
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath();
+                ctx.arc(-2, -2, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            getBounds() {
+                return { x: this.x - 4, y: this.y - 4, w: CONFIG.fruitSize + 8, h: CONFIG.fruitSize + 8 };
+            }
+        }
+
+        // Enemy class
+        class Enemy {
+            constructor(x, y, speed) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.direction = Math.random() > 0.5 ? 1 : -1;
+                this.animFrame = 0;
+                this.animTimer = 0;
+            }
+
+            update() {
+                this.x += this.speed * this.direction;
+
+                if (this.x <= 0) {
+                    this.x = 0;
+                    this.direction = 1;
+                } else if (this.x >= CONFIG.width - CONFIG.enemySize) {
+                    this.x = CONFIG.width - CONFIG.enemySize;
+                    this.direction = -1;
+                }
+
+                this.animTimer++;
+                if (this.animTimer > 10) {
+                    this.animTimer = 0;
+                    this.animFrame = (this.animFrame + 1) % 2;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + CONFIG.enemySize/2, this.y + CONFIG.enemySize/2);
+                ctx.scale(this.direction, 1);
+                ctx.translate(-CONFIG.enemySize/2, -CONFIG.enemySize/2);
+
+                // Bird body
+                ctx.fillStyle = '#9b59b6';
+                ctx.beginPath();
+                ctx.ellipse(12, 12, 10, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Wing
+                ctx.fillStyle = '#8e44ad';
+                const wingY = this.animFrame === 0 ? -3 : 3;
+                ctx.beginPath();
+                ctx.ellipse(12, 8 + wingY, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Beak
+                ctx.fillStyle = '#f39c12';
+                ctx.beginPath();
+                ctx.moveTo(0, 10);
+                ctx.lineTo(-5, 12);
+                ctx.lineTo(0, 14);
+                ctx.fill();
+
+                // Eye
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(6, 10, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(7, 10, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            getBounds() {
+                return { x: this.x, y: this.y - 5, w: CONFIG.enemySize, h: CONFIG.enemySize + 5 };
+            }
+        }
+
+        // Branch class
+        class Branch {
+            constructor(x, y, width) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+            }
+
+            draw() {
+                // Branch
+                ctx.fillStyle = '#4a3728';
+                ctx.fillRect(this.x, this.y, this.width, 8);
+
+                // Wood grain
+                ctx.fillStyle = '#3d2914';
+                ctx.fillRect(this.x + 5, this.y + 2, this.width - 10, 2);
+                ctx.fillRect(this.x + 10, this.y + 5, this.width - 20, 1);
+
+                // Leaves
+                ctx.fillStyle = '#2d5a27';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width, this.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Ladder class
+        class Ladder {
+            constructor(x, y1, y2) {
+                this.x = x;
+                this.y1 = y1;
+                this.y2 = y2;
+                this.width = 24;
+            }
+
+            draw() {
+                const height = this.y2 - this.y1;
+                
+                // Degrau (landing/step at base)
+                ctx.fillStyle = '#4A2C17';
+                ctx.fillRect(this.x - 8, this.y2, this.width + 16, 8);
+                ctx.fillStyle = '#5D3A1A';
+                ctx.fillRect(this.x - 6, this.y2, this.width + 12, 4);
+                
+                // Left rail (with wood texture)
+                ctx.fillStyle = '#5D3A1A';
+                ctx.fillRect(this.x, this.y1, 5, height);
+                ctx.fillStyle = '#8B5A2B';
+                ctx.fillRect(this.x + 1, this.y1, 3, height);
+                
+                // Right rail (with wood texture)
+                ctx.fillStyle = '#5D3A1A';
+                ctx.fillRect(this.x + this.width - 5, this.y1, 5, height);
+                ctx.fillStyle = '#8B5A2B';
+                ctx.fillRect(this.x + this.width - 4, this.y1, 3, height);
+
+                // Rungs with 3D effect
+                ctx.fillStyle = '#6B4226';
+                const rungSpacing = 20;
+                for (let y = this.y1 + 10; y < this.y2 - 5; y += rungSpacing) {
+                    // Main rung
+                    ctx.fillRect(this.x + 4, y, this.width - 8, 6);
+                    // Highlight
+                    ctx.fillStyle = '#9B6B3A';
+                    ctx.fillRect(this.x + 4, y, this.width - 8, 2);
+                    // Shadow
+                    ctx.fillStyle = '#4A2C17';
+                    ctx.fillRect(this.x + 4, y + 4, this.width - 8, 2);
+                    ctx.fillStyle = '#6B4226';
+                }
+                
+                // Top hooks/brackets
+                ctx.fillStyle = '#4A2C17';
+                ctx.fillRect(this.x - 2, this.y1 - 3, 8, 6);
+                ctx.fillRect(this.x + this.width - 6, this.y1 - 3, 8, 6);
+                // Hook shine
+                ctx.fillStyle = '#7B5B3A';
+                ctx.fillRect(this.x, this.y1 - 1, 4, 2);
+                ctx.fillRect(this.x + this.width - 4, this.y1 - 1, 4, 2);
+            }
+
+            getBounds() {
+                return { x: this.x - 5, y: this.y1, w: this.width + 10, h: this.y2 - this.y1 };
+            }
+        }
+
+        // Tree class
+        class Tree {
+            constructor(x, height) {
+                this.x = x;
+                this.y = CONFIG.height - 40 - height;
+                this.height = height;
+                this.width = 60;
+            }
+
+            draw() {
+                // Trunk
+                const gradient = ctx.createLinearGradient(this.x + this.width/2 - 15, this.y, this.x + this.width/2 + 15, this.y);
+                gradient.addColorStop(0, '#2d1f14');
+                gradient.addColorStop(0.5, '#4a3728');
+                gradient.addColorStop(1, '#2d1f14');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(this.x + this.width/2 - 15, this.y, 30, this.height);
+
+                // Foliage (multiple layers)
+                for (let i = 0; i < 5; i++) {
+                    const foliageY = this.y + i * 30 - 20;
+                    const foliageSize = 70 - i * 8;
+                    ctx.fillStyle = i % 2 === 0 ? '#2d5a27' : '#4a8c3f';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, foliageY, foliageSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Initialize game
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = CONFIG.width;
+            canvas.height = CONFIG.height;
+
+            // Create stars
+            createStars();
+
+            // Event listeners
+            window.addEventListener('keydown', e => {
+                keys[e.code] = true;
+                if (e.code === 'Space') e.preventDefault();
+                if (e.code === 'Enter' && gameState === 'playing') {
+                    togglePause();
+                }
+            });
+            window.addEventListener('keyup', e => keys[e.code] = false);
+
+            // Initial draw
+            drawBackground();
+        }
+
+        let stars = [];
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 50; i++) {
+                stars.push({
+                    x: Math.random() * CONFIG.width,
+                    y: Math.random() * CONFIG.height * 0.6,
+                    size: Math.random() * 2 + 1,
+                    delay: Math.random() * 2
+                });
+            }
+        }
+
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, CONFIG.height);
+            gradient.addColorStop(0, '#0f0f23');
+            gradient.addColorStop(0.5, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+
+            // Stars
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(Date.now() / 1000 + star.delay) * 0.3})`;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            });
+
+            // Moon
+            ctx.fillStyle = '#f5f6fa';
+            ctx.beginPath();
+            ctx.arc(700, 80, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#0f0f23';
+            ctx.beginPath();
+            ctx.arc(690, 75, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = '#3d2914';
+            ctx.fillRect(0, CONFIG.height - 40, CONFIG.width, 40);
+
+            // Grass
+            ctx.fillStyle = '#2d5a27';
+            ctx.fillRect(0, CONFIG.height - 45, CONFIG.width, 8);
+        }
+
+        function startGame() {
+            // Resume audio context
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            gameState = 'playing';
+            score = 0;
+            lives = 3;
+            currentLevel = 0;
+            
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('level-screen').classList.add('hidden');
+
+            startLevel(currentLevel);
+        }
+
+        function startLevel(level) {
+            currentLevel = level;
+            const levelConfig = CONFIG.levels[level];
+
+            timeRemaining = levelConfig.timeLimit;
+
+            // Show level screen
+            document.getElementById('level-num').textContent = level + 1;
+            document.getElementById('level-desc').textContent = levelConfig.description;
+            document.getElementById('level-target').textContent = levelConfig.targetScore;
+            document.getElementById('level-time').textContent = levelConfig.timeLimit;
+            document.getElementById('level-screen').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('level-screen').classList.add('hidden');
+                initLevel(levelConfig);
+                gameState = 'playing';
+                lastTime = Date.now();
+                gameLoop();
+            }, 2000);
+        }
+
+        function initLevel(levelConfig) {
+            // Create trees
+            trees = [
+                new Tree(150, 400),
+                new Tree(370, 450),
+                new Tree(590, 400)
+            ];
+
+            // Create branches
+            branches = [];
+            const branchYPositions = [480, 400, 320, 240, 160];
+            trees.forEach((tree, treeIndex) => {
+                branchYPositions.forEach((y, i) => {
+                    if (i % 2 === treeIndex % 2) {
+                        branches.push(new Branch(tree.x - 20, y, tree.width + 40));
+                    }
+                });
+            });
+
+            // Create ladders (connecting branches vertically)
+            ladders = [];
+            const ladderPositions = [
+                { x: trees[0].x + 25, y1: 500, y2: 140 },
+                { x: trees[1].x + 25, y1: 500, y2: 100 },
+                { x: trees[2].x + 25, y1: 500, y2: 140 }
+            ];
+            ladderPositions.forEach(pos => {
+                ladders.push(new Ladder(pos.x, pos.y1, pos.y2));
+            });
+
+            // Create fruits
+            fruits = [];
+            for (let i = 0; i < levelConfig.fruitCount; i++) {
+                const branch = branches[Math.floor(Math.random() * branches.length)];
+                fruits.push(new Fruit(
+                    branch.x + Math.random() * (branch.width - 20),
+                    branch.y - 25,
+                    i < levelConfig.fruitCount / 2 ? 'gold' : 'red'
+                ));
+            }
+
+            // Create enemies
+            enemies = [];
+            for (let i = 0; i < levelConfig.enemyCount || i < 3 + level; i++) {
+                const branch = branches[Math.floor(Math.random() * branches.length)];
+                enemies.push(new Enemy(
+                    branch.x + Math.random() * (branch.width - 30),
+                    branch.y - CONFIG.enemySize,
+                    levelConfig.enemySpeed
+                ));
+            }
+
+            // Create player
+            player = new Player(CONFIG.width / 2, CONFIG.height - 60);
+
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = currentLevel + 1;
+            document.getElementById('lives').textContent = '❤️'.repeat(lives);
+        }
+
+        function gameLoop() {
+            if (gameState !== 'playing') return;
+
+            const now = Date.now();
+            const delta = (now - lastTime) / 1000;
+            lastTime = now;
+
+            // Update time
+            timeRemaining -= delta;
+            if (timeRemaining <= 0) {
+                checkLevelComplete();
+                return;
+            }
+
+            // Update player
+            player.update();
+
+            // Update enemies
+            enemies.forEach(enemy => enemy.update());
+
+            // Check collisions
+            checkCollisions();
+
+            // Check win/lose
+            checkGameState();
+
+            // Draw
+            draw();
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function checkCollisions() {
+            const playerBounds = player.getBounds();
+
+            // Fruit collection
+            fruits.forEach(fruit => {
+                if (!fruit.collected && rectsCollide(playerBounds, fruit.getBounds())) {
+                    fruit.collected = true;
+                    const points = fruit.type === 'gold' ? 100 : 50;
+                    score += points;
+                    sounds.collect();
+                    updateUI();
+                    
+                    // Respawn fruit elsewhere after delay
+                    setTimeout(() => {
+                        const branch = branches[Math.floor(Math.random() * branches.length)];
+                        fruit.x = branch.x + Math.random() * (branch.width - 20);
+                        fruit.y = branch.y - 25;
+                        fruit.collected = false;
+                    }, 3000);
+                }
+            });
+
+            // Enemy collision
+            if (!player.invincible) {
+                enemies.forEach(enemy => {
+                    if (rectsCollide(playerBounds, enemy.getBounds())) {
+                        playerHit();
+                    }
+                });
+            }
+        }
+
+        function rectsCollide(a, b) {
+            return a.x < b.x + b.w &&
+                   a.x + a.w > b.x &&
+                   a.y < b.y + b.h &&
+                   a.y + a.h > b.y;
+        }
+
+        function playerHit() {
+            lives--;
+            sounds.hit();
+            updateUI();
+
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                // Reset position and give invincibility
+                player.x = CONFIG.width / 2;
+                player.y = CONFIG.height - 60;
+                player.vx = 0;
+                player.vy = 0;
+                player.invincible = true;
+                player.invincibleTimer = 120;
+            }
+        }
+
+        function checkLevelComplete() {
+            const levelConfig = CONFIG.levels[currentLevel];
+            
+            if (score >= levelConfig.targetScore) {
+                sounds.levelup();
+                
+                if (currentLevel < CONFIG.levels.length - 1) {
+                    // Next level
+                    currentLevel++;
+                    startLevel(currentLevel);
+                } else {
+                    // Win game!
+                    gameWin();
+                }
+            } else {
+                gameOver();
+            }
+        }
+
+        function checkGameState() {
+            // Check if all fruits collected
+            const remainingFruits = fruits.filter(f => !f.collected).length;
+            if (remainingFruits === 0) {
+                // Respawn fruits
+                fruits.forEach(fruit => {
+                    const branch = branches[Math.floor(Math.random() * branches.length)];
+                    fruit.x = branch.x + Math.random() * (branch.width - 20);
+                    fruit.y = branch.y - 25;
+                    fruit.collected = false;
+                });
+            }
+        }
+
+        function gameOver() {
+            gameState = 'gameover';
+            sounds.gameover();
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('magicTreeHighScore', highScore);
+            }
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        function gameWin() {
+            gameState = 'gameover';
+            sounds.levelup();
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('magicTreeHighScore', highScore);
+            }
+
+            document.getElementById('final-score').textContent = score + ' - YOU WIN!';
+            document.getElementById('high-score').textContent = 'HIGH: ' + highScore;
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        function showMenu() {
+            gameState = 'menu';
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('level-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            drawBackground();
+        }
+
+        function togglePause() {
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '30px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAUSED', CONFIG.width/2, CONFIG.height/2);
+            } else if (gameState === 'paused') {
+                gameState = 'playing';
+                lastTime = Date.now();
+                gameLoop();
+            }
+        }
+
+        function draw() {
+            drawBackground();
+
+            // Draw trees
+            trees.forEach(tree => tree.draw());
+
+            // Draw branches
+            branches.forEach(branch => branch.draw());
+            
+            // Draw ladders
+            ladders.forEach(ladder => ladder.draw());
+
+            // Draw fruits
+            fruits.forEach(fruit => fruit.draw());
+
+            // Draw enemies
+            enemies.forEach(enemy => enemy.draw());
+
+            // Draw player
+            player.draw();
+
+            // Draw timer
+            ctx.fillStyle = 'white';
+            ctx.font = '12px "Press Start 2P"';
+            ctx.textAlign = 'right';
+            ctx.fillText('⏱ ' + Math.ceil(timeRemaining), CONFIG.width - 20, 30);
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>
