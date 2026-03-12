@@ -243,19 +243,34 @@
         }
 
         /* Responsive */
-        /* Touch Controls - Analog Stick + Jump Button */
+        /* Touch Controls - Inside game wrapper */
         #touch-controls {
             display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             justify-content: space-between;
             align-items: flex-end;
-            padding: 20px 30px 20px 30px;
-            height: 180px;
+            padding: 15px 20px;
+            height: 140px;
             background: transparent;
             border: none;
+            box-sizing: border-box;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #touch-controls > * {
+            pointer-events: auto;
         }
         
         /* Always show touch controls on mobile */
         @media (max-width: 1024px) {
+            #game-wrapper {
+                position: relative;
+            }
+            
             #touch-controls {
                 display: flex !important;
             }
@@ -392,7 +407,24 @@
 <body>
     <div id="game-wrapper">
         <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+            <canvas id="gameCanvas"></canvas>
+            
+            <!-- Touch Controls - Inside game container -->
+            <div id="touch-controls">
+                <!-- Analog Stick (bottom left) -->
+                <div id="analog-stick-area">
+                    <div id="analog-stick-base">
+                        <div id="analog-stick"></div>
+                    </div>
+                </div>
+                
+                <!-- Jump Button (bottom right) -->
+                <div id="jump-button-area">
+                    <div id="jump-button">
+                        <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+                    </div>
+                </div>
+            </div>
         
         <div id="ui-overlay">
             <div class="score-display">SCORE: <span id="score">0</span></div>
