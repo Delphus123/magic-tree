@@ -243,23 +243,39 @@
         }
 
         /* Responsive */
-        /* Touch Controls */
+        /* Touch Controls - Below game screen */
         #touch-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 160px;
+            width: 100%;
+            max-width: 800px;
+            height: 140px;
             display: none;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
+            padding: 10px 40px;
             z-index: 100;
-            pointer-events: none;
+            background: #0a0a15;
+            border: 2px solid #4a3728;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-sizing: border-box;
+            margin: 0 auto;
         }
         
         #touch-controls.active {
             display: flex;
+        }
+        
+        /* Wrap game container and controls together */
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        #game-wrapper #game-container {
+            width: 100%;
+            max-width: 800px;
         }
         
         .touch-btn {
@@ -316,15 +332,30 @@
         }
         
         @media (max-width: 768px) {
+            #game-wrapper {
+                width: 100%;
+            }
+            
+            #game-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+            
             #touch-controls {
                 display: flex !important;
+                max-width: 100%;
             }
         }
         
         @media (max-width: 480px) {
             #touch-controls {
-                height: 140px;
-                padding: 10px 20px;
+                height: 120px;
+                padding: 8px 20px;
+                justify-content: center;
+                gap: 20px;
             }
             
             .touch-btn {
@@ -343,14 +374,15 @@
             }
             
             .touch-action-btn {
-                width: 65px;
-                height: 65px;
+                width: 60px;
+                height: 60px;
             }
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
+    <div id="game-wrapper">
+        <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui-overlay">
