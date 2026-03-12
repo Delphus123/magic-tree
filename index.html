@@ -276,83 +276,94 @@
             }
         }
         
-        /* Analog Stick - Bottom Left */
+        /* Analog Stick - Bottom Left corner */
         #analog-stick-area {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            padding: 10px;
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            width: 70px;
+            height: 70px;
+            z-index: 110;
         }
         
         #analog-stick-base {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.25);
             border-radius: 50%;
-            left: 10px;
-            top: 10px;
+            left: 5px;
+            top: 5px;
         }
         
         #analog-stick {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 30px;
+            height: 30px;
             background: radial-gradient(circle at 30% 30%, #5a5a8a, #2a2a4a);
             border: 2px solid #8888aa;
             border-radius: 50%;
-            left: 25px;
-            top: 25px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-            transition: transform 0.05s;
+            left: 15px;
+            top: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            transition: transform 0.08s ease-out;
         }
         
         #analog-stick::after {
             content: '';
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 18px;
+            height: 18px;
             background: radial-gradient(circle at 40% 40%, #6a6a9a, #3a3a5a);
             border-radius: 50%;
-            left: 10px;
-            top: 10px;
+            left: 6px;
+            top: 6px;
         }
         
-        /* Jump Button - Bottom Right */
+        #analog-stick.active {
+            background: radial-gradient(circle at 30% 30%, #7a7aaa, #4a4a6a);
+            border-color: #aaaacc;
+            box-shadow: 0 0 15px rgba(100, 100, 200, 0.6);
+        }
+        
+        /* Jump Button - Bottom Right corner */
         #jump-button-area {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            padding: 10px;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            width: 70px;
+            height: 70px;
+            z-index: 110;
         }
         
         #jump-button {
             position: absolute;
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            border: 4px solid #ff6b6b;
+            border: 3px solid #ff6b6b;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             left: 10px;
             top: 10px;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5), inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 8px rgba(231, 76, 60, 0.5), inset 0 -3px 6px rgba(0, 0, 0, 0.2);
             cursor: pointer;
         }
         
         #jump-button svg {
-            width: 35px;
-            height: 35px;
+            width: 22px;
+            height: 22px;
             fill: white;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
         
         #jump-button:active, #jump-button.active {
-            transform: scale(0.95);
+            transform: scale(0.9);
             background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
+            box-shadow: 0 0 20px rgba(255, 100, 100, 0.7);
         }
         
         @media (max-width: 768px) {
@@ -1393,7 +1404,7 @@
             const analogStick = document.getElementById('analog-stick');
             const analogBase = document.getElementById('analog-stick-base');
             let analogTouchId = null;
-            const maxDistance = 35;
+            const maxDistance = 20;
             
             analogStick.addEventListener('touchstart', e => {
                 e.preventDefault();
