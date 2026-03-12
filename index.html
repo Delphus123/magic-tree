@@ -261,8 +261,11 @@
             margin: 0 auto;
         }
         
-        #touch-controls.active {
-            display: flex;
+        /* Always show touch controls on mobile */
+        @media (max-width: 1024px) {
+            #touch-controls {
+                display: flex !important;
+            }
         }
         
         /* Wrap game container and controls together */
@@ -271,11 +274,17 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
         
         #game-wrapper #game-container {
             width: 100%;
             max-width: 800px;
+        }
+        
+        #game-wrapper #touch-controls {
+            width: 100%;
         }
         
         .touch-btn {
