@@ -243,22 +243,15 @@
         }
 
         /* Responsive */
-        /* Touch Controls - Below game screen */
+        /* Touch Controls - Analog Stick + Jump Button */
         #touch-controls {
-            width: 100%;
-            max-width: 800px;
-            height: 140px;
             display: none;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 40px;
-            z-index: 100;
-            background: #0a0a15;
-            border: 2px solid #4a3728;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            box-sizing: border-box;
-            margin: 0 auto;
+            align-items: flex-end;
+            padding: 20px 30px 20px 30px;
+            height: 180px;
+            background: transparent;
+            border: none;
         }
         
         /* Always show touch controls on mobile */
@@ -268,76 +261,83 @@
             }
         }
         
-        /* Wrap game container and controls together */
-        #game-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+        /* Analog Stick - Bottom Left */
+        #analog-stick-area {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            padding: 10px;
         }
         
-        #game-wrapper #game-container {
-            width: 100%;
-            max-width: 800px;
+        #analog-stick-base {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            left: 10px;
+            top: 10px;
         }
         
-        #game-wrapper #touch-controls {
-            width: 100%;
+        #analog-stick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, #5a5a8a, #2a2a4a);
+            border: 2px solid #8888aa;
+            border-radius: 50%;
+            left: 25px;
+            top: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.05s;
         }
         
-        .touch-btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(46, 204, 113, 0.3);
-            border: 3px solid #2ecc71;
+        #analog-stick::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 40% 40%, #6a6a9a, #3a3a5a);
+            border-radius: 50%;
+            left: 10px;
+            top: 10px;
+        }
+        
+        /* Jump Button - Bottom Right */
+        #jump-button-area {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            padding: 10px;
+        }
+        
+        #jump-button {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: 4px solid #ff6b6b;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
+            left: 10px;
+            top: 10px;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5), inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
         }
         
-        .touch-btn:active, .touch-btn.active {
-            background: rgba(46, 204, 113, 0.6);
+        #jump-button svg {
+            width: 35px;
+            height: 35px;
+            fill: white;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        }
+        
+        #jump-button:active, #jump-button.active {
             transform: scale(0.95);
-        }
-        
-        .touch-btn svg {
-            width: 30px;
-            height: 30px;
-            fill: #2ecc71;
-        }
-        
-        .touch-dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 55px);
-            grid-template-rows: repeat(2, 55px);
-            gap: 5px;
-        }
-        
-        .touch-dpad .touch-btn {
-            width: 55px;
-            height: 55px;
-        }
-        
-        .touch-action-btn {
-            width: 80px;
-            height: 80px;
-            background: rgba(231, 76, 60, 0.3);
-            border-color: #e74c3c;
-        }
-        
-        .touch-action-btn:active, .touch-action-btn.active {
-            background: rgba(231, 76, 60, 0.6);
-        }
-        
-        .touch-action-btn svg {
-            fill: #e74c3c;
+            background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
         }
         
         @media (max-width: 768px) {
@@ -430,29 +430,20 @@
             <button class="btn btn-secondary" onclick="showMenu()">MENU</button>
         </div>
 
-        <!-- Touch Controls -->
+        <!-- Touch Controls - Analog Stick + Jump Button -->
         <div id="touch-controls">
-            <div class="touch-dpad">
-                <div></div>
-                <div class="touch-btn" id="btn-up" data-key="ArrowUp">
+            <!-- Analog Stick (bottom left) -->
+            <div id="analog-stick-area">
+                <div id="analog-stick-base">
+                    <div id="analog-stick"></div>
+                </div>
+            </div>
+            
+            <!-- Jump Button (bottom right) -->
+            <div id="jump-button-area">
+                <div id="jump-button">
                     <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
                 </div>
-                <div></div>
-                <div class="touch-btn" id="btn-left" data-key="ArrowLeft">
-                    <svg viewBox="0 0 24 24"><path d="M4 12l8-8v5h8v6h-8v5z"/></svg>
-                </div>
-                <div></div>
-                <div class="touch-btn" id="btn-right" data-key="ArrowRight">
-                    <svg viewBox="0 0 24 24"><path d="M20 12l-8 8v-5h-8v-6h8v-5z"/></svg>
-                </div>
-                <div></div>
-                <div class="touch-btn" id="btn-down" data-key="ArrowDown">
-                    <svg viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z"/></svg>
-                </div>
-                <div></div>
-            </div>
-            <div class="touch-action-btn touch-btn" id="btn-jump" data-key="Space">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
             </div>
         </div>
     </div>
@@ -1366,42 +1357,86 @@
                 console.log('Desktop detected - Keyboard controls enabled');
             }
             
-            const buttonMappings = {
-                'btn-up': 'ArrowUp',
-                'btn-down': 'ArrowDown',
-                'btn-left': 'ArrowLeft',
-                'btn-right': 'ArrowRight',
-                'btn-jump': 'Space'
-            };
+            // Analog Stick
+            const analogStick = document.getElementById('analog-stick');
+            const analogBase = document.getElementById('analog-stick-base');
+            let analogTouchId = null;
+            const maxDistance = 35;
             
-            Object.entries(buttonMappings).forEach(([id, key]) => {
-                const btn = document.getElementById(id);
-                if (!btn) return;
+            analogStick.addEventListener('touchstart', e => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                analogTouchId = touch.identifier;
+                analogStick.classList.add('active');
                 
-                btn.addEventListener('touchstart', e => {
-                    e.preventDefault();
-                    keys[key] = true;
-                    btn.classList.add('active');
-                    
-                    if (key === 'Space' && gameState === 'playing') {
-                        // Jump handled in game loop
+                if (gameState === 'paused') {
+                    togglePause();
+                }
+            });
+            
+            analogStick.addEventListener('touchmove', e => {
+                e.preventDefault();
+                for (let touch of e.changedTouches) {
+                    if (touch.identifier === analogTouchId) {
+                        const rect = analogBase.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
+                        
+                        let dx = touch.clientX - centerX;
+                        let dy = touch.clientY - centerY;
+                        
+                        // Limit distance
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > maxDistance) {
+                            dx = (dx / distance) * maxDistance;
+                            dy = (dy / distance) * maxDistance;
+                        }
+                        
+                        // Move stick
+                        analogStick.style.transform = `translate(${dx}px, ${dy}px)`;
+                        
+                        // Set keys based on direction
+                        keys['ArrowLeft'] = dx < -10;
+                        keys['ArrowRight'] = dx > 10;
+                        keys['ArrowUp'] = dy < -10;
+                        keys['ArrowDown'] = dy > 10;
                     }
-                    
-                    if (gameState === 'paused') {
-                        togglePause();
+                }
+            });
+            
+            analogStick.addEventListener('touchend', e => {
+                for (let touch of e.changedTouches) {
+                    if (touch.identifier === analogTouchId) {
+                        analogTouchId = null;
+                        analogStick.style.transform = 'translate(0, 0)';
+                        analogStick.classList.remove('active');
+                        
+                        // Reset all direction keys
+                        keys['ArrowLeft'] = false;
+                        keys['ArrowRight'] = false;
+                        keys['ArrowUp'] = false;
+                        keys['ArrowDown'] = false;
                     }
-                });
+                }
+            });
+            
+            // Jump Button
+            const jumpBtn = document.getElementById('jump-button');
+            
+            jumpBtn.addEventListener('touchstart', e => {
+                e.preventDefault();
+                keys['Space'] = true;
+                jumpBtn.classList.add('active');
                 
-                btn.addEventListener('touchend', e => {
-                    e.preventDefault();
-                    keys[key] = false;
-                    btn.classList.remove('active');
-                });
-                
-                btn.addEventListener('touchcancel', e => {
-                    keys[key] = false;
-                    btn.classList.remove('active');
-                });
+                if (gameState === 'playing') {
+                    // Jump handled in game loop
+                }
+            });
+            
+            jumpBtn.addEventListener('touchend', e => {
+                e.preventDefault();
+                keys['Space'] = false;
+                jumpBtn.classList.remove('active');
             });
             
             // Prevent default touch scrolling
