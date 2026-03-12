@@ -243,11 +243,109 @@
         }
 
         /* Responsive */
-        @media (max-width: 600px) {
-            h1 { font-size: 16px; }
-            .btn { font-size: 10px; padding: 12px 20px; }
-            #ui-overlay { font-size: 8px; padding: 8px; }
-            .controls { font-size: 7px; }
+        /* Touch Controls */
+        #touch-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 160px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        #touch-controls.active {
+            display: flex;
+        }
+        
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(46, 204, 113, 0.3);
+            border: 3px solid #2ecc71;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .touch-btn:active, .touch-btn.active {
+            background: rgba(46, 204, 113, 0.6);
+            transform: scale(0.95);
+        }
+        
+        .touch-btn svg {
+            width: 30px;
+            height: 30px;
+            fill: #2ecc71;
+        }
+        
+        .touch-dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 55px);
+            grid-template-rows: repeat(2, 55px);
+            gap: 5px;
+        }
+        
+        .touch-dpad .touch-btn {
+            width: 55px;
+            height: 55px;
+        }
+        
+        .touch-action-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+        
+        .touch-action-btn:active, .touch-action-btn.active {
+            background: rgba(231, 76, 60, 0.6);
+        }
+        
+        .touch-action-btn svg {
+            fill: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            #touch-controls {
+                display: flex !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #touch-controls {
+                height: 140px;
+                padding: 10px 20px;
+            }
+            
+            .touch-btn {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .touch-dpad {
+                grid-template-columns: repeat(3, 45px);
+                grid-template-rows: repeat(2, 45px);
+            }
+            
+            .touch-dpad .touch-btn {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .touch-action-btn {
+                width: 65px;
+                height: 65px;
+            }
         }
     </style>
 </head>
@@ -289,6 +387,32 @@
             <p class="high-score">HIGH SCORE: <span id="high-score">0</span></p>
             <button class="btn" onclick="startGame()">PLAY AGAIN</button>
             <button class="btn btn-secondary" onclick="showMenu()">MENU</button>
+        </div>
+
+        <!-- Touch Controls -->
+        <div id="touch-controls">
+            <div class="touch-dpad">
+                <div></div>
+                <div class="touch-btn" id="btn-up" data-key="ArrowUp">
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+                </div>
+                <div></div>
+                <div class="touch-btn" id="btn-left" data-key="ArrowLeft">
+                    <svg viewBox="0 0 24 24"><path d="M4 12l8-8v5h8v6h-8v5z"/></svg>
+                </div>
+                <div></div>
+                <div class="touch-btn" id="btn-right" data-key="ArrowRight">
+                    <svg viewBox="0 0 24 24"><path d="M20 12l-8 8v-5h-8v-6h8v-5z"/></svg>
+                </div>
+                <div></div>
+                <div class="touch-btn" id="btn-down" data-key="ArrowDown">
+                    <svg viewBox="0 0 24 24"><path d="M12 20l8-8h-5v-8h-6v8h-5z"/></svg>
+                </div>
+                <div></div>
+            </div>
+            <div class="touch-action-btn touch-btn" id="btn-jump" data-key="Space">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
         </div>
     </div>
 
@@ -390,7 +514,7 @@
                     this.vx *= 0.8;
                 }
 
-                // Jump
+                // Jump - only with Space, not arrows
                 if ((keys['Space']) && (this.onBranch || this.onLadder)) {
                     this.vy = CONFIG.jumpForce;
                     this.onBranch = false;
@@ -398,57 +522,72 @@
                     sounds.jump();
                 }
 
-                // Check if near ladder and trying to climb
+                // Check if near ladder for climbing
                 let nearLadder = false;
+                let closestLadder = null;
+                let closestDist = Infinity;
+                
                 for (let ladder of ladders) {
-                    if (this.x + CONFIG.playerSize/2 > ladder.x - 10 && 
-                        this.x + CONFIG.playerSize/2 < ladder.x + ladder.width + 10 &&
-                        this.y + CONFIG.playerSize > ladder.y1 - 20 && 
-                        this.y < ladder.y2 + 20) {
+                    // Check if player is within horizontal range of ladder
+                    const playerCenterX = this.x + CONFIG.playerSize / 2;
+                    const ladderCenterX = ladder.x + ladder.width / 2;
+                    const dist = Math.abs(playerCenterX - ladderCenterX);
+                    
+                    // Check if player is vertically within ladder range
+                    const inVerticalRange = this.y + CONFIG.playerSize > ladder.y1 - 30 && 
+                                           this.y < ladder.y2 + 30;
+                    
+                    if (dist < 30 && inVerticalRange && dist < closestDist) {
                         nearLadder = true;
-                        break;
+                        closestLadder = ladder;
+                        closestDist = dist;
                     }
                 }
                 
-                // Ladder climbing - only ArrowUp/ArrowDown for climbing (not jumping)
-                if (nearLadder && (keys['ArrowUp'] || keys['ArrowDown'])) {
+                // Start climbing if near ladder and pressing up/down
+                if (nearLadder && closestLadder && (keys['ArrowUp'] || keys['ArrowDown'])) {
                     this.onLadder = true;
-                    // Find and snap to ladder
-                    for (let ladder of ladders) {
-                        if (this.x + CONFIG.playerSize/2 > ladder.x - 10 && 
-                            this.x + CONFIG.playerSize/2 < ladder.x + ladder.width + 10) {
-                            this.x = ladder.x + ladder.width/2 - CONFIG.playerSize/2;
-                            break;
-                        }
-                    }
+                    // Snap to ladder center
+                    this.x = closestLadder.x + closestLadder.width / 2 - CONFIG.playerSize / 2;
                 }
                 
+                // Handle ladder movement
                 if (this.onLadder) {
+                    // Disable gravity on ladder
                     this.vy = 0;
+                    
+                    // Allow horizontal movement on ladder (slow)
+                    this.vx *= 0.7;
+                    
+                    // Climbing up
                     if (keys['ArrowUp'] || keys['KeyW']) {
-                        this.vy = -4;
-                        this.vx *= 0.5;
-                    } else if (keys['ArrowDown'] || keys['KeyS']) {
-                        this.vy = 4;
-                        this.vx *= 0.5;
-                    } else {
-                        // Stand still on ladder
-                        this.vx *= 0.8;
+                        this.vy = -5;
                     }
-                    // Check if still on ladder or jumped off
+                    // Climbing down
+                    else if (keys['ArrowDown'] || keys['KeyS']) {
+                        this.vy = 5;
+                    }
+                    
+                    // Check if still on the ladder
                     let stillOnLadder = false;
                     for (let ladder of ladders) {
-                        if (this.x + CONFIG.playerSize/2 > ladder.x && 
-                            this.x + CONFIG.playerSize/2 < ladder.x + ladder.width &&
-                            this.y + CONFIG.playerSize > ladder.y1 && 
-                            this.y < ladder.y2) {
+                        const playerCenterX = this.x + CONFIG.playerSize / 2;
+                        const ladderCenterX = ladder.x + ladder.width / 2;
+                        const inHorizontal = Math.abs(playerCenterX - ladderCenterX) < 25;
+                        const inVertical = this.y + CONFIG.playerSize > ladder.y1 && 
+                                          this.y < ladder.y2;
+                        if (inHorizontal && inVertical) {
                             stillOnLadder = true;
                             break;
                         }
                     }
-                    if (!stillOnLadder && this.y > CONFIG.height - 60) {
+                    
+                    // If jumped off or moved too far, leave ladder
+                    if (!stillOnLadder) {
                         this.onLadder = false;
                     }
+                    
+                    // Don't apply gravity while on ladder
                 } else {
                     // Apply gravity when not on ladder
                     this.vy += CONFIG.gravity;
@@ -692,57 +831,75 @@
                 this.x = x;
                 this.y1 = y1;
                 this.y2 = y2;
-                this.width = 24;
+                this.width = 28;
             }
 
             draw() {
                 const height = this.y2 - this.y1;
                 
-                // Degrau (landing/step at base)
-                ctx.fillStyle = '#4A2C17';
-                ctx.fillRect(this.x - 8, this.y2, this.width + 16, 8);
-                ctx.fillStyle = '#5D3A1A';
-                ctx.fillRect(this.x - 6, this.y2, this.width + 12, 4);
+                // Base platform/landing
+                ctx.fillStyle = '#3D2817';
+                ctx.fillRect(this.x - 12, this.y2 - 4, this.width + 24, 12);
                 
-                // Left rail (with wood texture)
-                ctx.fillStyle = '#5D3A1A';
-                ctx.fillRect(this.x, this.y1, 5, height);
-                ctx.fillStyle = '#8B5A2B';
-                ctx.fillRect(this.x + 1, this.y1, 3, height);
+                // Side rails - thick wooden beams with grain
+                const railGradient = ctx.createLinearGradient(this.x, 0, this.x + 6, 0);
+                railGradient.addColorStop(0, '#2D1F14');
+                railGradient.addColorStop(0.3, '#4A3728');
+                railGradient.addColorStop(0.7, '#4A3728');
+                railGradient.addColorStop(1, '#2D1F14');
                 
-                // Right rail (with wood texture)
-                ctx.fillStyle = '#5D3A1A';
-                ctx.fillRect(this.x + this.width - 5, this.y1, 5, height);
-                ctx.fillStyle = '#8B5A2B';
-                ctx.fillRect(this.x + this.width - 4, this.y1, 3, height);
-
-                // Rungs with 3D effect
-                ctx.fillStyle = '#6B4226';
-                const rungSpacing = 20;
-                for (let y = this.y1 + 10; y < this.y2 - 5; y += rungSpacing) {
-                    // Main rung
-                    ctx.fillRect(this.x + 4, y, this.width - 8, 6);
-                    // Highlight
-                    ctx.fillStyle = '#9B6B3A';
+                // Left rail
+                ctx.fillStyle = railGradient;
+                ctx.fillRect(this.x, this.y1, 6, height);
+                
+                // Right rail
+                ctx.fillRect(this.x + this.width - 6, this.y1, 6, height);
+                
+                // Rail highlights
+                ctx.fillStyle = '#5D4037';
+                ctx.fillRect(this.x + 1, this.y1, 2, height);
+                ctx.fillRect(this.x + this.width - 5, this.y1, 2, height);
+                
+                // Rungs - horizontal wooden steps
+                const rungSpacing = 18;
+                for (let y = this.y1 + 12; y < this.y2 - 15; y += rungSpacing) {
+                    // Rung shadow
+                    ctx.fillStyle = '#2D1F14';
+                    ctx.fillRect(this.x + 4, y + 5, this.width - 8, 5);
+                    
+                    // Rung main body
+                    const rungGradient = ctx.createLinearGradient(0, y, 0, y + 8);
+                    rungGradient.addColorStop(0, '#8B5A2B');
+                    rungGradient.addColorStop(0.5, '#6B4226');
+                    rungGradient.addColorStop(1, '#4A2C17');
+                    ctx.fillStyle = rungGradient;
+                    ctx.fillRect(this.x + 4, y, this.width - 8, 8);
+                    
+                    // Rung highlight
+                    ctx.fillStyle = '#A0724D';
                     ctx.fillRect(this.x + 4, y, this.width - 8, 2);
-                    // Shadow
-                    ctx.fillStyle = '#4A2C17';
-                    ctx.fillRect(this.x + 4, y + 4, this.width - 8, 2);
-                    ctx.fillStyle = '#6B4226';
                 }
                 
-                // Top hooks/brackets
-                ctx.fillStyle = '#4A2C17';
-                ctx.fillRect(this.x - 2, this.y1 - 3, 8, 6);
-                ctx.fillRect(this.x + this.width - 6, this.y1 - 3, 8, 6);
-                // Hook shine
-                ctx.fillStyle = '#7B5B3A';
-                ctx.fillRect(this.x, this.y1 - 1, 4, 2);
-                ctx.fillRect(this.x + this.width - 4, this.y1 - 1, 4, 2);
+                // Metal brackets at top
+                ctx.fillStyle = '#4A4A4A';
+                ctx.fillRect(this.x - 3, this.y1 - 6, 12, 8);
+                ctx.fillRect(this.x + this.width - 9, this.y1 - 6, 12, 8);
+                
+                // Bracket shine
+                ctx.fillStyle = '#6B6B6B';
+                ctx.fillRect(this.x - 1, this.y1 - 4, 4, 2);
+                ctx.fillRect(this.x + this.width - 3, this.y1 - 4, 4, 2);
+                
+                // Rope/string wrapped around (traditional ladder style)
+                ctx.fillStyle = '#8B7355';
+                for (let y = this.y1 + 25; y < this.y2 - 20; y += 40) {
+                    ctx.fillRect(this.x - 4, y, 4, 3);
+                    ctx.fillRect(this.x + this.width, y, 4, 3);
+                }
             }
 
             getBounds() {
-                return { x: this.x - 5, y: this.y1, w: this.width + 10, h: this.y2 - this.y1 };
+                return { x: this.x - 8, y: this.y1, w: this.width + 16, h: this.y2 - this.y1 + 10 };
             }
         }
 
@@ -795,6 +952,9 @@
                 }
             });
             window.addEventListener('keyup', e => keys[e.code] = false);
+
+            // Touch controls - detect device and enable if mobile
+            initTouchControls();
 
             // Initial draw
             drawBackground();
@@ -904,17 +1064,6 @@
                         branches.push(new Branch(tree.x - 20, y, tree.width + 40));
                     }
                 });
-            });
-
-            // Create ladders (connecting branches vertically)
-            ladders = [];
-            const ladderPositions = [
-                { x: trees[0].x + 25, y1: 500, y2: 140 },
-                { x: trees[1].x + 25, y1: 500, y2: 100 },
-                { x: trees[2].x + 25, y1: 500, y2: 140 }
-            ];
-            ladderPositions.forEach(pos => {
-                ladders.push(new Ladder(pos.x, pos.y1, pos.y2));
             });
 
             // Create fruits
@@ -1155,6 +1304,72 @@
 
         // Initialize on load
         window.onload = init;
+
+        // Touch Controls Functions
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const mobilePatterns = [/android/i, /webos/i, /iphone/i, /ipad/i, /ipod/i, /blackberry/i, /windows phone/i, /mobile/i, /tablet/i];
+            const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
+            const isSmallScreen = window.innerWidth <= 1024;
+            return hasTouch && (isMobileUA || isSmallScreen);
+        }
+
+        function initTouchControls() {
+            const touchControls = document.getElementById('touch-controls');
+            
+            if (isMobileDevice()) {
+                touchControls.classList.add('active');
+                console.log('Mobile device detected - Touch controls enabled');
+            } else {
+                console.log('Desktop detected - Keyboard controls enabled');
+            }
+            
+            const buttonMappings = {
+                'btn-up': 'ArrowUp',
+                'btn-down': 'ArrowDown',
+                'btn-left': 'ArrowLeft',
+                'btn-right': 'ArrowRight',
+                'btn-jump': 'Space'
+            };
+            
+            Object.entries(buttonMappings).forEach(([id, key]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                
+                btn.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    keys[key] = true;
+                    btn.classList.add('active');
+                    
+                    if (key === 'Space' && gameState === 'playing') {
+                        // Jump handled in game loop
+                    }
+                    
+                    if (gameState === 'paused') {
+                        togglePause();
+                    }
+                });
+                
+                btn.addEventListener('touchend', e => {
+                    e.preventDefault();
+                    keys[key] = false;
+                    btn.classList.remove('active');
+                });
+                
+                btn.addEventListener('touchcancel', e => {
+                    keys[key] = false;
+                    btn.classList.remove('active');
+                });
+            });
+            
+            // Prevent default touch scrolling
+            document.body.addEventListener('touchmove', e => {
+                if (gameState === 'playing') {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
     </script>
 </body>
 </html>
